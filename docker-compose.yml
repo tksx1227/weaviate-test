@@ -1,4 +1,3 @@
----
 version: '3.4'
 services:
   weaviate:
@@ -12,17 +11,26 @@ services:
     image: semitechnologies/weaviate:1.22.5
     ports:
     - 8080:8080
-    - 50051:50051
-    volumes:
-    - weaviate_data:/var/lib/weaviate
     restart: on-failure:0
     environment:
+      IMAGE_INFERENCE_API: 'http://i2v-neural:8080'
       QUERY_DEFAULTS_LIMIT: 25
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      DEFAULT_VECTORIZER_MODULE: 'none'
-      ENABLE_MODULES: ''
+      DEFAULT_VECTORIZER_MODULE: 'img2vec-neural'
+      ENABLE_MODULES: 'img2vec-neural'
       CLUSTER_HOSTNAME: 'node1'
-volumes:
-  weaviate_data:
-...
+  i2v-neural:
+    image: semitechnologies/img2vec-pytorch:resnet50
+    environment:
+      ENABLE_CUDA: '0'
+  jupyter-notebook:
+    image: jupyter/base-notebook
+    ports:
+    - "8888:8888"
+    volumes:
+    - ".:/home/jovyan/work"
+    environment:
+      WEAVIATE_HOST: 'weaviate:8080'
+      JUPYTER_ENABLE_LAB: yes
+    command: start-notebook.sh --NotebookApp.token='' --NotebookApp.password=''
